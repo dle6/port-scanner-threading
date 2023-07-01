@@ -1,0 +1,30 @@
+import modules used to create program
+target host to scan, also converts to ip from URL if needed
+lock thread during print so we can get cleaner outputs
+custom ports for user to scan later
+options for user to scan different ports from 1 to 65535
+ask for input scan type
+number of threads are we going to allow for
+if option 3 is selected user can enter the range of ports to start scan and end
+display target and sets starting time
+port scan function
+creates a new socket and sets timeout to 0.5
+tries to connect to host
+no more sends/receives
+display port that is open
+if port is closed, pass instead of returning error
+close the socket
+create the queue and threader
+scanning port range from 1 to 1024
+scanning port range from 1 to 65535
+scan custom ports
+exiting
+threader thread pulls a worker
+from a queue and processes it
+get a worker from the queue
+Creates, starts and manages our threads
+load ports depending on the mode
+create a list for our threads
+wait until thread terminates
+run the thread count with the amount enter from user input and mode selected
+stop the timer and print how long
