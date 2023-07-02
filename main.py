@@ -1,11 +1,10 @@
-# import modules used to create program
 import socket
 import sys
 from queue import Queue
 import threading
 from datetime import datetime
 
-# target host to scan, also converts to ip from URL
+# target host to scan, also converts to IP from URL
 host = socket.gethostbyname(input("Enter your target IP address or URL here: "))
 
 # lock thread during print so we can get cleaner outputs
@@ -16,102 +15,100 @@ startPort = 0
 endPort = 0
 
 # options for user to scan different ports
-print("Select your scan type: ")
-print("1: 1 to 1024 port")
-print("2: 1 to 65535 port")
-print("3: for custom port")
+print("Select your scan type:")
+print("1: 1 to 1024 ports")
+print("2: 1 to 65535 ports")
+print("3: Custom port range")
 print("4: Exit")
 # ask for input scan type
-mode = int(input("Select any option: "))
-# number of threads are we going to allow for
+mode = int(input("Select an option: "))
+# number of threads to allow
 threadcount = int(input("Thread amount: "))
 
-# if option 3 is selected user can enter the range of ports to start scan and end
+# if option 3 is selected, user can enter the range of ports to start and end scan
 if mode == 3:
-    startPort = int(input("Enter starting port number: "))
-    endPort = int(input("Enter ending port number: "))
+    startPort = int(input("Enter the starting port number: "))
+    endPort = int(input("Enter the ending port number: "))
 
-# display target and sets starting time
+# display target and set starting time
 print("-" * 50)
 print(f"Target IP: {host}")
 t1 = datetime.now()
 print("Scanning started at: " + str(datetime.now()))
 print("-" * 50)
 
-# port scan fucntion
+# port scan function
 def scan(port):
-    # creates a new socket and sets timeout to 0.5
+    # create a new socket and set timeout to 0.5 seconds
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(0.5)
     try:
-        # tries to connect to host
+        # try to connect to the host
         s.connect((host, port))
         # no more sends/receives
         s.shutdown(socket.SHUT_RDWR)
-        with print_lock:
-          # display port that is open
-            print(f"Port {port} is OPEN")
+        return True
     except:
-      # if port is closed, pass instead of returning error
+        # if port is closed, pass instead of returning an error
         pass
     finally:
         # close the socket
         s.close()
+    return False
 
 # create the queue and threader
 queue = Queue()
 
-def getports(mode):
+def get_ports(mode):
     # scanning port range from 1 to 1024
     if mode == 1:
         print("\nScanning Started")
-        for port in range(1, 1024):
+        for port in range(1, 1025):
             queue.put(port)
     # scanning port range from 1 to 65535
     elif mode == 2:
         print("\nScanning Started")
-        for port in range(1, 65535):
+        for port in range(1, 65536):
             queue.put(port)
     # scan custom ports
     elif mode == 3:
         print("\nScanning Started")
-        for port in range(startPort, endPort):
+        for port in range(startPort, endPort + 1):
             queue.put(port)
     # exiting
     elif mode == 4:
         print("Exiting")
         sys.exit()
 
-# threader thread pulls a worker
-# from a queue and processes it
+# threader thread pulls a worker from the queue and processes it
 def worker():
-    while not queue.empty():
+    while True:
         # get a worker from the queue
         port = queue.get()
         if scan(port):
-            print("Port {}".format(port))
+            with print_lock:
+                print(f"Port {port} is OPEN")
+        # mark task as done
+        queue.task_done()
 
-# Creates, starts and manages our threads
-# load ports depending on the mode
+# create, start, and manage threads
 def run_scanner(threads, mode):
-    getports(mode)
+    get_ports(mode)
     # create a list for our threads
     thread_list = []
 
-    for t in range(threads):
+    for _ in range(threads):
         thread = threading.Thread(target=worker)
         thread_list.append(thread)
 
     for thread in thread_list:
         thread.start()
 
-    for thread in thread_list:
-        # wait until thread terminates
-        thread.join()
+    # block until all tasks are done
+    queue.join()
 
-# run the thread count with the amount enter from user input and mode selected
+# run the scanner
 run_scanner(threadcount, mode)
-
 # stop the timer and print how long
 print("-" * 50)
 t2 = datetime.now()
