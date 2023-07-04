@@ -25,6 +25,7 @@ print("1: 1 to 1024 port")
 print("2: 1 to 65535 port")
 print("3: for custom port")
 print("4: Exit")
+
 # ask for input scan type
 try:
     mode = int(input("Select an option: "))
